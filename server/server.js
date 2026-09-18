@@ -29,6 +29,10 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "ok", service: "nuzio-ai-api" });
+});
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "nuzio-ai-api" });
 });
