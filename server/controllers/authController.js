@@ -55,6 +55,50 @@ export const login = async (req, res, next) => {
   }
 };
 
+export const signup = async (req, res, next) => {
+  try {
+    const { name = "", email = "", password = "" } = req.body;
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedName) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    if (!isEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Enter a valid email address." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters." });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+
+    if (existingUser) {
+      return res.status(409).json({ message: "An account with this email already exists." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      password: hashedPassword
+    });
+
+    return res.status(201).json({
+      token: createToken(user._id),
+      user: toSafeUser(user)
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getMe = async (req, res) => {
   return res.status(200).json({ user: toSafeUser(req.user) });
 };

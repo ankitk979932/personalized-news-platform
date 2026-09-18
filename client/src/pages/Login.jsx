@@ -1,16 +1,21 @@
-import { Eye, EyeOff, Lock, Mail, Radio, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Radio, Sparkles, UserRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ErrorMessage from "../components/ErrorMessage.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const initialForm = {
+  name: "",
   email: "",
   password: ""
 };
 
-const validateForm = (form) => {
+const validateForm = (form, isSignup) => {
   const nextErrors = {};
+
+  if (isSignup && !form.name.trim()) {
+    nextErrors.name = "Name is required.";
+  }
 
   if (!form.email.trim()) {
     nextErrors.email = "Email is required.";
@@ -20,6 +25,8 @@ const validateForm = (form) => {
 
   if (!form.password) {
     nextErrors.password = "Password is required.";
+  } else if (isSignup && form.password.length < 8) {
+    nextErrors.password = "Password must be at least 8 characters.";
   }
 
   return nextErrors;
@@ -27,7 +34,8 @@ const validateForm = (form) => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
+  const [isSignup, setIsSignup] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
@@ -42,7 +50,8 @@ const Login = () => {
   };
 
   const fillDemo = () => {
-    setForm({ email: "ankit@example.com", password: "password123" });
+    setIsSignup(false);
+    setForm({ name: "", email: "ankit@example.com", password: "password123" });
     setErrors({});
     setServerError("");
   };
@@ -50,7 +59,7 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationErrors = validateForm(form);
+    const validationErrors = validateForm(form, isSignup);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -61,10 +70,16 @@ const Login = () => {
     setServerError("");
 
     try {
-      await login({
+      const credentials = {
         email: form.email.trim(),
         password: form.password
-      });
+      };
+
+      if (isSignup) {
+        await signup({ ...credentials, name: form.name.trim() });
+      } else {
+        await login(credentials);
+      }
       navigate("/news", { replace: true });
     } catch (error) {
       setServerError(error.message || "Unable to sign in right now.");
@@ -84,9 +99,11 @@ const Login = () => {
               </span>
               <span>Nuzio AI</span>
             </div>
-            <button className="demo-button" type="button" onClick={fillDemo}>
-              Demo login
-            </button>
+            {!isSignup && (
+              <button className="demo-button" type="button" onClick={fillDemo}>
+                Demo login
+              </button>
+            )}
           </div>
 
           <div className="login-copy">
@@ -94,11 +111,33 @@ const Login = () => {
               <Sparkles size={15} />
               Personalized news briefing
             </span>
-            <h1>Good morning</h1>
-            <p>Sign in to continue your AI-ranked news queue.</p>
+            <h1>{isSignup ? "Create your account" : "Good morning"}</h1>
+            <p>
+              {isSignup
+                ? "Start your personalized AI-ranked news queue."
+                : "Sign in to continue your AI-ranked news queue."}
+            </p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {isSignup && (
+              <label className={`field ${errors.name ? "has-error" : ""}`}>
+                <span>Full name</span>
+                <span className="field-control">
+                  <UserRound size={18} />
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Your name"
+                    value={form.name}
+                    onChange={updateField}
+                    autoComplete="name"
+                  />
+                </span>
+                {errors.name && <small>{errors.name}</small>}
+              </label>
+            )}
+
             <label className={`field ${errors.email ? "has-error" : ""}`}>
               <span>Email</span>
               <span className="field-control">
@@ -125,7 +164,7 @@ const Login = () => {
                   placeholder="Enter password"
                   value={form.password}
                   onChange={updateField}
-                  autoComplete="current-password"
+                  autoComplete={isSignup ? "new-password" : "current-password"}
                 />
                 <button
                   className="ghost-icon"
@@ -142,11 +181,25 @@ const Login = () => {
             <ErrorMessage message={serverError} />
 
             <button className="primary-button" type="submit" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? (isSignup ? "Creating account..." : "Signing in...") : isSignup ? "Create account" : "Sign in"}
             </button>
           </form>
 
-          <p className="login-footnote">Demo: ankit@example.com / password123</p>
+          <p className="login-switch">
+            {isSignup ? "Already have an account?" : "New to Nuzio AI?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignup((current) => !current);
+                setForm(initialForm);
+                setErrors({});
+                setServerError("");
+              }}
+            >
+              {isSignup ? "Sign in" : "Create an account"}
+            </button>
+          </p>
+          {!isSignup && <p className="login-footnote">Demo: ankit@example.com / password123</p>}
         </div>
 
         <aside className="preview-panel" aria-hidden="true">

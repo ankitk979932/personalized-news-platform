@@ -298,6 +298,22 @@ img {
   font-weight: 700;
 }
 
+.login-switch {
+  margin: 18px 0 0;
+  color: #7a7984;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.login-switch button {
+  padding: 0;
+  border: 0;
+  color: #5b43d6;
+  background: transparent;
+  font-weight: 900;
+}
+
 .preview-panel {
   position: relative;
   display: grid;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import { loginUser } from "../services/api.js";
+import { loginUser, signupUser } from "../services/api.js";
 
 const AuthContext = createContext(null);
 const storageKey = "nuzio-auth";
@@ -25,6 +25,14 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const signup = async (credentials) => {
+    const data = await signupUser(credentials);
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem(storageKey);
     setToken("");
@@ -36,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       token,
       user,
       login,
+      signup,
       logout,
       isAuthenticated: Boolean(token)
     }),

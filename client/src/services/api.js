@@ -32,6 +32,12 @@ export const loginUser = (credentials) =>
     body: credentials
   });
 
+export const signupUser = (credentials) =>
+  apiRequest("/auth/signup", {
+    method: "POST",
+    body: credentials
+  });
+
 export const getCurrentUser = (token) => apiRequest("/auth/me", { token });
 
 export const getPersonalizedNews = (token) =>
